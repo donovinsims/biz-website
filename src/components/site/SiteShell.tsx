@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Menu, Phone } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
-import { ThemeSwitcher } from "@/components/kibo-ui/theme-switcher";
+import { ThemeSwitcher } from "@/components/site/ThemeControl";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -98,6 +98,13 @@ function ThemeControl({ className }: { className?: string }) {
 
 const exampleSlugs = new Set(examples.map((e) => e.slug));
 
+/** The sticky mobile CTA bar and its footer clearance apply only to the three pages that offer the free look. */
+const mobileCtaRoutes = new Set(["/", "/examples", "/about"]);
+
+function useMobileCtaBar() {
+  return mobileCtaRoutes.has(useLocation().pathname);
+}
+
 /** Scroll to top on route change, or to the #hash target (example modals handle their own hashes). */
 function ScrollManager() {
   const { pathname, hash } = useLocation();
@@ -128,7 +135,7 @@ function Header() {
             <NavLink
               className={({ isActive }) =>
                 cn(
-                  "inline-flex h-12 items-center rounded-full px-4 font-medium text-base transition-colors hover:text-foreground",
+                  "relative inline-flex h-12 items-center rounded-full px-4 font-medium text-base transition-colors hover:text-foreground",
                   isActive ? "text-foreground" : "text-muted-foreground",
                 )
               }
@@ -136,7 +143,18 @@ function Header() {
               key={item.to}
               to={item.to}
             >
-              {item.label}
+              {({ isActive }) => (
+                <span className="relative">
+                  {item.label}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "absolute -bottom-0.5 left-0 h-px w-full bg-current transition-opacity",
+                      isActive ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -316,9 +334,11 @@ function MobileCtaBar() {
 }
 
 export default function SiteShell() {
+  const showMobileCtaBar = useMobileCtaBar();
+
   return (
     <ToastProvider position="top-center">
-      <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <div className="flex min-h-screen max-w-full flex-col overflow-x-hidden bg-background text-foreground">
         <a
           className="sr-only z-50 rounded-full bg-foreground px-4 py-2 text-background focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
           href="#main"
@@ -327,13 +347,13 @@ export default function SiteShell() {
         </a>
         <ScrollManager />
         <Header />
-        <main className="flex-1" id="main">
+        <main className="flex-1 overflow-x-hidden" id="main">
           <Outlet />
         </main>
-        <div className="pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div className={cn(showMobileCtaBar && "pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0")}>
           <Footer />
         </div>
-        <MobileCtaBar />
+        {showMobileCtaBar && <MobileCtaBar />}
       </div>
     </ToastProvider>
   );

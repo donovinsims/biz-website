@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Check, CircleHelp, Hand, Play, RotateCcw, Sparkles, Zap, type LucideIcon } from "lucide-react";
+import { Check, CircleHelp, Hand, Pause, Play, RotateCcw, Sparkles, Zap, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
@@ -75,17 +75,18 @@ export default function WorkflowDiagram({ flow, title }: { flow: Flow; title: st
   const reduced = useReducedMotion();
   const { pos, W, H, width, height } = useMemo(() => layout(flow, !isDesktop), [flow, isDesktop]);
   const [active, setActive] = useState(-1);
-  const [played, setPlayed] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [hasPlayed, setHasPlayed] = useState(false);
   const timer = useRef<number | undefined>(undefined);
-  const startTimer = useRef<number | undefined>(undefined);
   const markerId = `flow-arrow-${useId().replace(/:/g, "")}`;
 
   const order = useMemo(() => new Map(flow.nodes.map((n, i) => [n.id, i + 1])), [flow]);
   const center = (id: string) => ({ x: pos[id].x + W / 2, y: pos[id].y + H / 2 });
 
   const play = () => {
-    window.clearTimeout(startTimer.current);
     window.clearInterval(timer.current);
+    setHasPlayed(true);
+    setPlaying(true);
     setActive(0);
     let i = 0;
     timer.current = window.setInterval(() => {
@@ -93,24 +94,26 @@ export default function WorkflowDiagram({ flow, title }: { flow: Flow; title: st
       if (i >= flow.path.length) {
         window.clearInterval(timer.current);
         setActive(-1);
-        setPlayed(true);
+        setPlaying(false);
         return;
       }
       setActive(i);
     }, STEP_MS);
   };
 
-  useEffect(() => {
+  const pause = () => {
+    window.clearInterval(timer.current);
+    setPlaying(false);
     setActive(-1);
-    setPlayed(false);
-    if (reduced) return;
-    startTimer.current = window.setTimeout(play, 600);
-    return () => {
-      window.clearTimeout(startTimer.current);
-      window.clearInterval(timer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flow, reduced]);
+  };
+
+  useEffect(() => {
+    window.clearInterval(timer.current);
+    setActive(-1);
+    setPlaying(false);
+    setHasPlayed(false);
+    return () => window.clearInterval(timer.current);
+  }, [flow]);
 
   const activeId = active >= 0 ? flow.path[active] : null;
   const dot = activeId ? center(activeId) : null;
@@ -212,10 +215,26 @@ export default function WorkflowDiagram({ flow, title }: { flow: Flow; title: st
           <li className="flex items-center gap-1.5"><Hand className="size-3" aria-hidden="true" />You approve</li>
           <li className="flex items-center gap-1.5"><Check className="size-3" aria-hidden="true" />Result</li>
         </ul>
-        <Button className="h-12 rounded-full px-5" onClick={play} variant="outline">
-          {played ? <RotateCcw aria-hidden="true" /> : <Play aria-hidden="true" />}
-          {played ? "Replay" : "Play"}
-        </Button>
+        {!reduced && (
+          <Button className="h-12 rounded-full px-5" onClick={playing ? pause : play} variant="outline">
+            {playing ? (
+              <>
+                <Pause aria-hidden="true" />
+                Pause
+              </>
+            ) : hasPlayed ? (
+              <>
+                <RotateCcw aria-hidden="true" />
+                Replay
+              </>
+            ) : (
+              <>
+                <Play aria-hidden="true" />
+                Play
+              </>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

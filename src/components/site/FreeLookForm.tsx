@@ -56,6 +56,7 @@ function ErrorText({ id, message }: { id: string; message?: string }) {
 }
 
 export default function FreeLookForm({ source }: { source: string }) {
+  const endpoint = import.meta.env.VITE_FORM_ENDPOINT as string | undefined;
   const [values, setValues] = useState<Values>(empty);
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "failed">("idle");
@@ -104,17 +105,13 @@ export default function FreeLookForm({ source }: { source: string }) {
     };
 
     try {
-      const endpoint = import.meta.env.VITE_FORM_ENDPOINT as string | undefined;
-      if (endpoint) {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(String(res.status));
-      } else {
-        console.info("[Clockout] VITE_FORM_ENDPOINT not set. Submission:", payload);
-      }
+      if (!endpoint) throw new Error("Lead form endpoint is not configured.");
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(String(res.status));
       setStatus("done");
       track("form_submit", { source });
     } catch {
@@ -140,6 +137,24 @@ export default function FreeLookForm({ source }: { source: string }) {
           sooner? Call or text anytime.
         </p>
         <CallTextButtons source={`${source}-thanks`} />
+      </div>
+    );
+  }
+
+  if (!endpoint) {
+    return (
+      <div className="flex flex-col items-start gap-4 rounded-3xl border bg-card p-8 sm:p-10" role="status">
+        <span className="flex size-12 items-center justify-center rounded-full bg-foreground text-background">
+          <CircleAlert aria-hidden="true" className="size-6" />
+        </span>
+        <p className="font-bold text-2xl tracking-tight">Online requests are not open on this preview yet.</p>
+        <p className="text-lg text-muted-foreground">
+          To talk through what is eating your week, call, text, or email Donovin directly.
+        </p>
+        <div className="flex flex-col gap-3">
+          <CallTextButtons source={`${source}-preview`} />
+          <EmailLink source={`${source}-preview`} />
+        </div>
       </div>
     );
   }

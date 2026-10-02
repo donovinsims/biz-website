@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ListOrdered, Workflow, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogClose, DialogDescription, DialogPopup, DialogTitle } from "@/components/ui/dialog";
 import { CallTextButtons, PrimaryCta } from "@/components/site/cta";
 import WorkflowDiagram, { FlowList } from "@/components/examples/WorkflowDiagram";
@@ -22,9 +23,16 @@ function Body({ example }: { example: Example }) {
   const [asList, setAsList] = useState(false);
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
-      <section className="flex flex-col gap-2">
-        <H>The problem</H>
-        <p className="text-base leading-relaxed sm:text-lg">{example.problem}</p>
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <H>How it flows</H>
+          <Button aria-pressed={asList} className="h-11 rounded-full px-3 sm:h-12 sm:px-4" onClick={() => setAsList((v) => !v)} variant="ghost">
+            {asList ? <Workflow aria-hidden="true" /> : <ListOrdered aria-hidden="true" />}
+            <span className="sm:hidden">Steps as list</span>
+            <span className="max-sm:hidden">See the steps as a list</span>
+          </Button>
+        </div>
+        {asList ? <FlowList flow={example.flow} /> : <WorkflowDiagram flow={example.flow} title={example.title} />}
       </section>
       <section className="flex flex-col gap-3">
         <H>What I set up</H>
@@ -37,38 +45,38 @@ function Body({ example }: { example: Example }) {
           ))}
         </ul>
       </section>
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <H>How it flows</H>
-          <Button aria-pressed={asList} className="h-11 rounded-full px-3 sm:h-12 sm:px-4" onClick={() => setAsList((v) => !v)} variant="ghost">
-            {asList ? <Workflow aria-hidden="true" /> : <ListOrdered aria-hidden="true" />}
-            <span className="sm:hidden">Steps as list</span>
-            <span className="max-sm:hidden">See the steps as a list</span>
-          </Button>
-        </div>
-        {asList ? <FlowList flow={example.flow} /> : <WorkflowDiagram flow={example.flow} title={example.title} />}
-      </section>
       <section className="rounded-2xl border bg-muted p-4 sm:p-5">
         <H>You stay in control</H>
         <p className="mt-2 text-base leading-relaxed sm:text-lg">{example.control}</p>
       </section>
-      <section className="flex flex-col gap-3">
-        <H>What changes</H>
-        <ul className="flex flex-col gap-2">
-          {example.changes.map((s) => (
-            <li className="flex gap-3 text-base leading-snug sm:text-lg" key={s}>
-              <span aria-hidden="true">→</span>
-              {s}
-            </li>
-          ))}
-        </ul>
-      </section>
-      {example.day && (
-        <section className="flex flex-col gap-2">
-          <H>A day with it</H>
-          <p className="text-base leading-relaxed sm:text-lg">{example.day}</p>
-        </section>
-      )}
+      <Collapsible>
+        <CollapsibleTrigger className="flex h-12 w-full items-center justify-center rounded-full border px-5 font-semibold">
+          More detail
+        </CollapsibleTrigger>
+        <CollapsibleContent className="flex flex-col gap-6 pt-6">
+          <section className="flex flex-col gap-2">
+            <H>The problem</H>
+            <p className="text-base leading-relaxed sm:text-lg">{example.problem}</p>
+          </section>
+          <section className="flex flex-col gap-3">
+            <H>What changes</H>
+            <ul className="flex flex-col gap-2">
+              {example.changes.map((s) => (
+                <li className="flex gap-3 text-base leading-snug sm:text-lg" key={s}>
+                  <span aria-hidden="true">→</span>
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </section>
+          {example.day && (
+            <section className="flex flex-col gap-2">
+              <H>A day with it</H>
+              <p className="text-base leading-relaxed sm:text-lg">{example.day}</p>
+            </section>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
       <p className="w-fit rounded-full border px-3 py-1 text-muted-foreground text-xs">
         Illustrative example, not a client result
       </p>

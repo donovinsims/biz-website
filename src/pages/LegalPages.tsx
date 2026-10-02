@@ -1,14 +1,35 @@
 import type React from "react";
+import { Link } from "react-router";
 import { EmailLink } from "@/components/site/cta";
 import { contact } from "@/content/site";
 import { useSeo } from "@/lib/seo";
 
-function LegalLayout({ title, children }: { title: string; children: React.ReactNode }) {
+function LegalLayout({
+  title,
+  children,
+  prevNext,
+}: {
+  title: string;
+  children: React.ReactNode;
+  prevNext: React.ReactNode;
+}) {
   return (
-    <article className="mx-auto flex w-full max-w-[680px] flex-col gap-5 px-5 py-14 text-lg leading-relaxed sm:px-0 sm:py-20 [&_h2]:mt-6 [&_h2]:font-bold [&_h2]:text-2xl">
+    <article className="mx-auto flex w-full max-w-[65ch] flex-col gap-5 px-5 py-14 text-lg leading-relaxed sm:px-0 sm:py-20 [&_h2]:mt-6 [&_h2]:font-bold [&_h2]:text-2xl">
       <h1 className="font-bold text-[2.5rem] leading-tight tracking-[-0.035em]">{title}</h1>
       <p className="text-muted-foreground text-base">Last updated: October 1, 2026</p>
       {children}
+      <nav
+        aria-label="Legal"
+        className="mt-10 flex flex-col gap-4 border-t pt-8 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <Link
+          className="inline-flex min-h-12 items-center font-medium text-muted-foreground hover:text-foreground"
+          to="/"
+        >
+          Back to Home
+        </Link>
+        {prevNext}
+      </nav>
     </article>
   );
 }
@@ -16,7 +37,17 @@ function LegalLayout({ title, children }: { title: string; children: React.React
 export function PrivacyPage() {
   useSeo("Privacy Policy | Clockout", "How Clockout uses the information you send through this site.");
   return (
-    <LegalLayout title="Privacy Policy">
+    <LegalLayout
+      prevNext={
+        <Link
+          className="inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
+          to="/terms"
+        >
+          Next: Terms
+        </Link>
+      }
+      title="Privacy Policy"
+    >
       <p>
         When you fill out the free-look form, I get your name, business name, phone number, and
         anything else you choose to share. I use it only to contact you about your request.
@@ -42,7 +73,17 @@ export function PrivacyPage() {
 export function TermsPage() {
   useSeo("Terms | Clockout", "Simple terms for using the Clockout website.");
   return (
-    <LegalLayout title="Terms">
+    <LegalLayout
+      prevNext={
+        <Link
+          className="inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
+          to="/privacy"
+        >
+          Previous: Privacy Policy
+        </Link>
+      }
+      title="Terms"
+    >
       <p>This site describes the work Clockout does for local businesses. Using it doesn't create any agreement or obligation.</p>
       <h2>The free look</h2>
       <p>

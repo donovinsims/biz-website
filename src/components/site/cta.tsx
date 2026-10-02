@@ -39,14 +39,16 @@ export function PrimaryCta({
   onBeforeScroll?: () => void;
 }) {
   const scrollToForm = useScrollToForm();
+  const handleClick = () => {
+    track(event, { source });
+    onBeforeScroll?.();
+    window.setTimeout(scrollToForm, onBeforeScroll ? 220 : 0);
+  };
   return (
-    <Button
-      className={cn(pill, "group", className)}
-      onClick={() => {
-        track(event, { source });
-        onBeforeScroll?.();
-        window.setTimeout(scrollToForm, onBeforeScroll ? 220 : 0);
-      }}
+    <a
+      className={cn(pill, "group inline-flex items-center justify-center", className)}
+      href={`#${FORM_ID}`}
+      onClick={handleClick}
     >
       {label === CTA_LABEL ? (
         <>
@@ -60,7 +62,7 @@ export function PrimaryCta({
         aria-hidden="true"
         className="transition-transform duration-200 group-hover:translate-x-0.5"
       />
-    </Button>
+    </a>
   );
 }
 

@@ -3,6 +3,7 @@ import SiteShell from "@/components/site/SiteShell";
 import AboutPage from "@/pages/AboutPage";
 import ExamplesPage from "@/pages/ExamplesPage";
 import HomePage from "@/pages/HomePage";
+import NotFoundPage from "@/pages/NotFoundPage";
 import { PrivacyPage, TermsPage } from "@/pages/LegalPages";
 
 export const router = createBrowserRouter([
@@ -15,7 +16,7 @@ export const router = createBrowserRouter([
       { path: "about", Component: AboutPage },
       { path: "privacy", Component: PrivacyPage },
       { path: "terms", Component: TermsPage },
-      { path: "*", Component: HomePage },
+      { path: "*", Component: NotFoundPage },
     ],
   },
 ]);

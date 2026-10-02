@@ -9,6 +9,7 @@ export default function Section({
   className,
   divider = true,
   labelledBy,
+  headingLevel = "h2",
 }: {
   id?: string;
   title?: React.ReactNode;
@@ -17,8 +18,11 @@ export default function Section({
   className?: string;
   divider?: boolean;
   labelledBy?: string;
+  /** Pass "h1" on standalone pages (e.g. 404) whose title is the page heading. */
+  headingLevel?: "h1" | "h2";
 }) {
   const headingId = labelledBy ?? (id ? `${id}-title` : undefined);
+  const Heading = headingLevel;
   return (
     <section
       aria-labelledby={title ? headingId : undefined}
@@ -28,12 +32,12 @@ export default function Section({
       <div className={cn("py-16 sm:py-24", divider && "border-t")}>
         {title && (
           <header className="mb-10 max-w-2xl sm:mb-12">
-            <h2
+            <Heading
               className="text-h2"
               id={headingId}
             >
               {title}
-            </h2>
+            </Heading>
             {subhead && (
               <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
                 {subhead}

@@ -1,5 +1,11 @@
 import FinalCta from "@/components/site/FinalCta";
-import { Faq, Hero, HowItWorks, Problems, ProofFirst, TownsStrip, WhoBehind, WontDo } from "@/components/home/HomeSections";
+import {
+  ExamplePreviews,
+  Faq,
+  Hero,
+  HowItWorks,
+  LocalCredibility,
+} from "@/components/home/HomeSections";
 import { PHOTO_URL, contact, towns } from "@/content/site";
 import { SITE_URL, useSeo } from "@/lib/seo";
 
@@ -25,12 +31,9 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <TownsStrip />
-      <Problems />
+      <ExamplePreviews />
       <HowItWorks />
-      <ProofFirst />
-      <WhoBehind />
-      <WontDo />
+      <LocalCredibility />
       {/* Add a "Results" section here once the first real client result exists. */}
       <Faq />
       <FinalCta source="home" />

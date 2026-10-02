@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -10,9 +10,9 @@
     --animate-toast-success-even: toast-success-even 0.32s cubic-bezier(0.5, 1, 0.89, 1);
     --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
     --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
-    --font-heading: 'Inter', sans-serif;
+    --font-heading: "Cabinet Grotesk", "Arial Narrow", sans-serif;
     --font-mono: ui-monospace, monospace;
-    --font-sans: 'Inter', sans-serif;
+    --font-sans: "Cabinet Grotesk", "Arial Narrow", sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
@@ -242,6 +242,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
   }
   code, kbd, samp, pre {
     font-family: var(--font-mono);
@@ -295,35 +296,22 @@
       0 0 0 3px var(--background),
       0 0 16px 5px color-mix(in srgb, var(--foreground) 40%, transparent);
   }
-  .animate-marquee {
-    animation: marquee 40s linear infinite;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .animate-marquee {
-      animation: none;
-    }
-  }
-}
-
-@keyframes marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes flow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--foreground) 35%, transparent); }
-  50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--foreground) 0%, transparent); }
 }
 
 /* Clockout type scale: one H2 style everywhere. */
 @utility text-h2 {
   font-weight: 700;
-  font-size: 2rem;
-  line-height: 1.1;
+  font-size: clamp(2.35rem, 4vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+/* One H3 style everywhere, for section headings under an H2. */
+@utility text-h3 {
+  font-weight: 700;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  line-height: 1.15;
   letter-spacing: -0.03em;
   text-wrap: balance;
-  @media (width >= 40rem) {
-    font-size: 2.75rem;
-  }
 }

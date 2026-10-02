@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 import { ArrowRight, Plus } from "lucide-react";
-import ExampleModal from "@/components/examples/ExampleModal";
+import { FlowPreview } from "@/components/examples/FlowPreview";
 import FinalCta from "@/components/site/FinalCta";
 import { CallTextButtons, PrimaryCta, useScrollToForm } from "@/components/site/cta";
 import { examples } from "@/content/examples";
@@ -8,7 +9,9 @@ import { useSeo } from "@/lib/seo";
 import { track } from "@/lib/track";
 
 const card =
-  "group flex h-full min-h-48 w-full flex-col gap-4 rounded-3xl border bg-card p-6 text-left outline-none transition-colors hover:border-foreground/40 focus-visible:border-foreground focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-7";
+  "group flex h-full min-h-48 w-full flex-col gap-4 rounded-2xl border bg-card p-6 text-left outline-none transition-colors hover:border-foreground/40 focus-visible:border-foreground focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-7";
+
+const ExampleModal = lazy(() => import("@/components/examples/ExampleModal"));
 
 function slugFromHash() {
   const s = window.location.hash.slice(1);
@@ -22,6 +25,7 @@ export default function ExamplesPage() {
   );
   const [slug, setSlug] = useState<string | null>(slugFromHash);
   const scrollToForm = useScrollToForm();
+  const { hash } = useLocation();
 
   useEffect(() => {
     const onHash = () => setSlug(slugFromHash());
@@ -36,6 +40,20 @@ export default function ExamplesPage() {
     if (s) track("example_open", { slug: s });
   }, []);
 
+  /**
+   * A `Link` to /examples#slug navigates with React Router's pushState, which does
+   * not fire a native `hashchange`, so mirror the router hash into the dialog state.
+   * `synced` keeps this from reacting to `open()`'s own replaceState writes.
+   */
+  const synced = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (synced.current === hash) return;
+    synced.current = hash;
+    const s = hash ? slugFromHash() : null;
+    if (s) open(s);
+    else setSlug(null);
+  }, [hash, open]);
+
   const index = examples.findIndex((e) => e.slug === slug);
   const step = (dir: 1 | -1) => open(examples[(index + dir + examples.length) % examples.length].slug);
 
@@ -44,7 +62,7 @@ export default function ExamplesPage() {
       <section className="mx-auto w-full max-w-[1100px] px-5 pt-10 pb-16 sm:px-8 sm:pt-16 sm:pb-24">
         <div className="flex max-w-3xl flex-col gap-5">
           <h1 className="font-bold text-[2.5rem] leading-[1.02] tracking-[-0.04em] sm:text-[3.75rem]">
-            What this can look like.
+            Practical fixes for your business
           </h1>
           <p className="text-lg leading-relaxed sm:text-xl">
             Five common fixes for local businesses. Tap one to see how it works, step by step.
@@ -56,22 +74,17 @@ export default function ExamplesPage() {
 
         {/* Slot: feature the first real client example here once it exists. */}
         <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {examples.map((e, i) => (
+          {examples.map((e) => (
             <li key={e.slug}>
-              <button className={card} onClick={() => open(e.slug)} type="button">
-                <div className="flex items-center justify-between">
-                  <span className="flex size-12 items-center justify-center rounded-full border">
-                    <e.icon aria-hidden="true" className="size-5" strokeWidth={1.75} />
-                  </span>
-                  <span className="text-muted-foreground text-sm tabular-nums">0{i + 1}</span>
-                </div>
+              <a className={card} href={`#${e.slug}`} onClick={(ev) => { ev.preventDefault(); open(e.slug); }}>
+                <FlowPreview flow={e.flow} />
                 <h2 className="font-bold text-xl leading-tight tracking-tight">{e.title}</h2>
                 <p className="text-base text-muted-foreground leading-relaxed">{e.hook}</p>
                 <span className="mt-auto inline-flex items-center gap-1.5 font-semibold">
                   See how it works
                   <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
-              </button>
+              </a>
             </li>
           ))}
           <li>
@@ -107,13 +120,17 @@ export default function ExamplesPage() {
 
       <FinalCta source="examples" />
 
-      <ExampleModal
-        example={index >= 0 ? examples[index] : null}
-        index={index}
-        onClose={() => open(null)}
-        onStep={step}
-        total={examples.length}
-      />
+      {index >= 0 && (
+        <Suspense fallback={null}>
+          <ExampleModal
+            example={examples[index]}
+            index={index}
+            onClose={() => open(null)}
+            onStep={step}
+            total={examples.length}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

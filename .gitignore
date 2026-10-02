@@ -4,6 +4,7 @@ build/
 .cache/
 .env*
 .vite/
+.vercel/
 vite.config.*.timestamp-*
 *.tsbuildinfo
 *-debug.log*
@@ -19,3 +20,4 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+.vercel
