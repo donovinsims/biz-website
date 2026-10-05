@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -22,93 +22,81 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-  Check,
-  ChevronRight,
   ChevronsRight,
-  CircleHelp,
-  Hand,
-  Maximize,
+  ChevronRight,
   Minus,
   Pause,
   Play,
   Plus,
   RotateCcw,
-  Sparkles,
-  Zap,
-  type LucideIcon,
 } from "lucide-react";
-import type { Flow, FlowNodeType } from "@/content/examples";
+import { cardFor, examples, type Flow, type NodeCard } from "@/content/examples";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import NodeCardView from "./NodeCard";
 
 /* ------------------------------------------------------------------ layout */
 
-const NODE_W = 172;
-const COLUMN = 210;
-const ROW = 150;
-/** Narrow (vertical) layout spacing. */
-const V_COLUMN = 200;
-const V_ROW = 130;
+const CARD_W = 320;
+/** Vertical gap between rows, estimated from the rendered card height. */
+const VROW = 380;
+/** Desktop: the branch lane sits to the right of the main column. */
+const BRANCH_X = 360;
+/** Narrow: the branch lane stacks under the main column. */
+const BRANCH_GAP = 56;
+const BRANCH_PAD = 176;
 const STEP_MS = 1500;
 
-type Variant = "trigger" | "stacked" | "human" | "task";
-
-const variants: Record<FlowNodeType, Variant> = {
-  trigger: "trigger",
-  step: "task",
-  draft: "stacked",
-  decision: "task",
-  approve: "human",
-  result: "task",
-};
-
-const nodeIcons: Record<FlowNodeType, LucideIcon | null> = {
-  trigger: Zap,
-  step: null,
-  draft: Sparkles,
-  decision: CircleHelp,
-  approve: Hand,
-  result: Check,
-};
-
-const variantHeights: Record<Variant, string> = {
-  task: "h-[54px]",
-  trigger: "h-[54px]",
-  human: "h-[72px]",
-  stacked: "h-[92px]",
-};
-
-const legend: { color: string; label: string; opacity?: number }[] = [
-  { color: "var(--foreground)", label: "Trigger" },
-  { color: "var(--foreground)", label: "AI draft", opacity: 0.45 },
-  { color: "var(--flow-human-border)", label: "You approve" },
-  { color: "var(--flow-port)", label: "Step" },
-];
+const edgeId = (from: string, to: string) => `${from}->${to}`;
 
 /* --------------------------------------------------------------- xy types */
 
 type OomolNodeData = {
-  label: string;
-  kind: FlowNodeType;
-  variant: Variant;
+  card: NodeCard;
   active: boolean;
-  vertical: boolean;
+  selected: boolean;
+  onSelect: () => void;
 };
 type OomolNodeType = Node<OomolNodeData, "oomol">;
 
 type OomolEdgeData = { label?: "Yes" | "No"; active: boolean };
 type OomolEdgeType = Edge<OomolEdgeData, "oomol">;
 
-const edgeId = (from: string, to: string) => `${from}->${to}`;
+const flowSignature = (flow: Flow) =>
+  `${flow.nodes.map((n) => `${n.id}:${n.type}:${n.stage}:${n.row ?? 0}`).join("|")}::${flow.edges
+    .map((e) => `${e.from}>${e.to}`)
+    .join("|")}`;
 
-function buildNodes(flow: Flow, vertical: boolean): OomolNodeType[] {
-  return flow.nodes.map((n) => ({
-    id: n.id,
-    type: "oomol",
-    position: vertical
-      ? { x: (n.row ?? 0) * V_COLUMN, y: n.stage * V_ROW }
-      : { x: n.stage * COLUMN, y: (n.row ?? 0) * ROW },
-    data: { label: n.label, kind: n.type, variant: variants[n.type], active: false, vertical },
-  }));
+/** The copy that fills the cards lives on the example, not the bare flow. */
+function cardSourceFor(flow: Flow, title: string): { setup: string[]; hook: string } {
+  const byReference = examples.find((example) => example.flow === flow);
+  if (byReference) return byReference;
+  const signature = flowSignature(flow);
+  const byShape = examples.find((example) => flowSignature(example.flow) === signature);
+  if (byShape) return byShape;
+  return { setup: [], hook: title };
+}
+
+function buildNodes(flow: Flow, source: { setup: string[]; hook: string }, narrow: boolean): OomolNodeType[] {
+  const lastStage = flow.nodes.reduce((max, node) => Math.max(max, node.stage), 0);
+  const branchY = lastStage * VROW + BRANCH_PAD + BRANCH_GAP;
+  return flow.nodes.map((node, index) => {
+    const branch = (node.row ?? 0) > 0;
+    return {
+      id: node.id,
+      type: "oomol",
+      position: branch
+        ? narrow
+          ? { x: 0, y: branchY }
+          : { x: BRANCH_X, y: node.stage * VROW }
+        : { x: 0, y: node.stage * VROW },
+      data: {
+        card: cardFor(source, node, index),
+        active: false,
+        selected: false,
+        onSelect: () => {},
+      },
+    };
+  });
 }
 
 function buildEdges(flow: Flow): OomolEdgeType[] {
@@ -124,47 +112,26 @@ function buildEdges(flow: Flow): OomolEdgeType[] {
 /* ------------------------------------------------------------------ nodes */
 
 const handleStyle = {
-  width: 6,
-  height: 6,
-  minWidth: 6,
-  minHeight: 6,
+  width: 8,
+  height: 8,
+  minWidth: 8,
+  minHeight: 8,
   borderRadius: 9999,
-  border: "none",
-  background: "var(--flow-port)",
+  border: "2px solid var(--node-card)",
+  background: "var(--edge-blue)",
 };
 
 function OomolNode({ data }: NodeProps<OomolNodeType>) {
-  const Icon = nodeIcons[data.kind];
-  const human = data.variant === "human";
   return (
-    <div
-      className={`flex flex-col justify-center gap-1 rounded-xl border px-3 text-xs ${
-        human ? "bg-[var(--flow-human)] border-[var(--flow-human-border)]" : "bg-[var(--flow-node)] border-[var(--flow-node-border)]"
-      } ${variantHeights[data.variant]} ${data.active ? "ring-2 ring-foreground" : ""}`}
-      style={{ width: NODE_W }}
-    >
-      <div className="flex items-center gap-2">
-        {Icon ? <Icon aria-hidden="true" className="shrink-0 opacity-70" size={14} /> : null}
-        <span className="leading-tight">{data.label}</span>
-      </div>
-      {data.variant === "stacked" ? (
-        <div className="flex flex-col gap-1">
-          <div className="h-1.5 w-full rounded-full bg-current opacity-15" />
-          <div className="h-1.5 w-3/4 rounded-full bg-current opacity-15" />
-        </div>
-      ) : null}
-      <Handle
-        className="rounded-full"
-        position={data.vertical ? Position.Top : Position.Left}
-        style={handleStyle}
-        type="target"
+    <div className="relative" style={{ width: CARD_W }}>
+      <Handle position={Position.Top} style={handleStyle} type="target" />
+      <NodeCardView
+        active={data.active}
+        card={data.card}
+        isSelected={data.selected}
+        onSelect={data.onSelect}
       />
-      <Handle
-        className="rounded-full"
-        position={data.vertical ? Position.Bottom : Position.Right}
-        style={handleStyle}
-        type="source"
-      />
+      <Handle position={Position.Bottom} style={handleStyle} type="source" />
     </div>
   );
 }
@@ -200,18 +167,19 @@ function OomolEdge({
         fill="none"
         id={id}
         markerEnd={markerEnd}
-        style={{ ...style, stroke: "var(--xy-edge-stroke)", strokeWidth: 1.5, strokeDasharray: label === "No" ? "5 5" : undefined }}
+        style={{ ...style, stroke: "var(--edge-blue)", strokeWidth: 2, strokeDasharray: "6 5" }}
       />
       {label ? (
         <EdgeLabelRenderer>
           <div
-            className="nodrag nopan pointer-events-none absolute rounded-full border px-1.5 py-0.5 text-[10px] leading-none"
+            className="nodrag nopan pointer-events-none absolute rounded-full border px-2 py-0.5 text-[11px] leading-normal font-medium"
             style={{
               transform: "translate(-50%, -50%)",
               left: labelX,
               top: labelY,
-              background: "var(--flow-toolbar)",
-              borderColor: "var(--flow-node-border)",
+              background: "var(--node-card)",
+              borderColor: "var(--node-border)",
+              color: "var(--node-secondary)",
             }}
           >
             {label}
@@ -243,19 +211,22 @@ function ToolButton({ label, onClick, children }: { label: string; onClick: () =
 
 function Canvas({ flow, title }: { flow: Flow; title: string }) {
   const narrow = useMediaQuery("(max-width: 640px)");
-  const initialNodes = useMemo(() => buildNodes(flow, narrow), [flow, narrow]);
+  const source = useMemo(() => cardSourceFor(flow, title), [flow, title]);
+  const initialNodes = useMemo(() => buildNodes(flow, source, narrow), [flow, source, narrow]);
   const initialEdges = useMemo(() => buildEdges(flow), [flow]);
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [playing, setPlaying] = useState(false);
   const [step, setStep] = useState(0);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [colorMode] = useState<"dark" | "light">(() =>
     typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light",
   );
   const { zoom } = useViewport();
-  const { fitView, setNodes: setFlowNodes, setViewport, zoomIn, zoomOut } = useReactFlow<OomolNodeType, OomolEdgeType>();
+  const { setNodes: setFlowNodes, setViewport, zoomIn, zoomOut } = useReactFlow<OomolNodeType, OomolEdgeType>();
+  const defaultViewport = narrow ? { x: 0, y: 0, zoom: 0.9 } : { x: 0, y: 0, zoom: 0.85 };
 
   useEffect(() => {
     if (!playing) return;
@@ -272,72 +243,68 @@ function Canvas({ flow, title }: { flow: Flow; title: string }) {
     return to && from ? edgeId(from, to) : undefined;
   }, [flow.path, playing, step]);
 
-  const shownNodes = useMemo(() => nodes.map((n) => ({ ...n, data: { ...n.data, active: n.id === activeId } })), [nodes, activeId]);
+  const toggle = useCallback((id: string) => {
+    setSelectedId((current) => (current === id ? null : id));
+  }, []);
+
+  const shownNodes = useMemo(
+    () =>
+      nodes.map((n) => ({
+        ...n,
+        data: {
+          ...n.data,
+          active: n.id === activeId,
+          selected: n.id === selectedId,
+          onSelect: () => toggle(n.id),
+        },
+      })),
+    [nodes, activeId, selectedId, toggle],
+  );
   const shownEdges = useMemo(() => edges.map((e) => ({ ...e, data: { ...e.data, active: e.id === activeEdge } })), [edges, activeEdge]);
 
   const restore = () => {
     setPlaying(false);
     setStep(0);
+    setSelectedId(null);
     setEdges(initialEdges);
     setFlowNodes(initialNodes);
-    if (narrow) setViewport({ x: 0, y: 0, zoom: 0.9 });
-    else fitView();
+    setViewport(defaultViewport);
   };
 
   const chrome = collapsed ? null : (
-    <>
-      <Panel position="top-left">
-        <ul
-          className="flex flex-wrap gap-x-3 gap-y-1 rounded-full border px-2.5 py-1 text-[10px] text-muted-foreground"
-          style={{ background: "var(--flow-toolbar)", borderColor: "var(--flow-node-border)" }}
-        >
-          {legend.map((item) => (
-            <li className="flex items-center gap-1" key={item.label}>
-              <span className="size-2 rounded-full" style={{ background: item.color, opacity: item.opacity ?? 1 }} />
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </Panel>
-      <Panel position="bottom-center">
-        <div
-          className="flex items-center gap-0.5 rounded-full border px-1 py-1"
-          style={{ background: "var(--flow-toolbar)", borderColor: "var(--flow-node-border)" }}
-        >
-          <ToolButton label="Zoom out" onClick={zoomOut}>
-            <Minus />
+    <Panel position="bottom-center">
+      <div
+        className="flex items-center gap-0.5 rounded-full border px-1 py-1"
+        style={{ background: "var(--flow-toolbar)", borderColor: "var(--flow-node-border)" }}
+      >
+        <ToolButton label="Zoom out" onClick={zoomOut}>
+          <Minus />
+        </ToolButton>
+        <span className="min-w-11 text-center text-[11px] tabular-nums text-muted-foreground">{Math.round(zoom * 100)}%</span>
+        <ToolButton label="Zoom in" onClick={zoomIn}>
+          <Plus />
+        </ToolButton>
+        <span className="mx-0.5 h-4 w-px bg-border" />
+        <ToolButton label="Reset diagram" onClick={restore}>
+          <RotateCcw />
+        </ToolButton>
+        {reduced ? null : (
+          <ToolButton label={playing ? "Pause the tour" : "Play the tour"} onClick={() => setPlaying((v) => !v)}>
+            {playing ? <Pause /> : <Play />}
           </ToolButton>
-          <span className="min-w-11 text-center text-[11px] tabular-nums text-muted-foreground">{Math.round(zoom * 100)}%</span>
-          <ToolButton label="Zoom in" onClick={zoomIn}>
-            <Plus />
-          </ToolButton>
-          <span className="mx-0.5 h-4 w-px bg-border" />
-          <ToolButton label="Fit to view" onClick={() => fitView()}>
-            <Maximize />
-          </ToolButton>
-          <ToolButton label="Reset diagram" onClick={restore}>
-            <RotateCcw />
-          </ToolButton>
-          {reduced ? null : (
-            <ToolButton label={playing ? "Pause the tour" : "Play the tour"} onClick={() => setPlaying((v) => !v)}>
-              {playing ? <Pause /> : <Play />}
-            </ToolButton>
-          )}
-        </div>
-      </Panel>
-    </>
+        )}
+      </div>
+    </Panel>
   );
 
   return (
     <ReactFlow
       attributionPosition="bottom-right"
       colorMode={colorMode}
+      defaultViewport={defaultViewport}
       disableKeyboardA11y
       edgeTypes={edgeTypes}
       edges={shownEdges}
-      fitView={!narrow}
-      fitViewOptions={{ padding: 0.2 }}
-      defaultViewport={narrow ? { x: 0, y: 0, zoom: 0.9 } : undefined}
       minZoom={0.2}
       nodeTypes={nodeTypes}
       nodes={shownNodes}
@@ -375,7 +342,7 @@ export default function OomolCanvas({ flow, title }: { flow: Flow; title: string
   return (
     <div
       aria-label={`Workflow diagram: ${title}, ${flow.nodes.length} steps.`}
-      className="oomol-canvas h-[560px] overflow-hidden rounded-[24px] border sm:h-[420px]"
+      className="oomol-canvas h-[560px] overflow-hidden rounded-[24px] border"
       role="img"
       style={{ background: "var(--flow-canvas)" }}
     >

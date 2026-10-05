@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800&display=swap");
 @import "tailwindcss";
 
@@ -380,4 +381,41 @@
 .oomol-active-edge {
   stroke-dasharray: 6 4;
   animation: oomol-dash 1s linear infinite;
+}
+
+/* Node card tokens (appended: the card design reads these, not the flow tokens). */
+:root {
+  --node-card: #ffffff;
+  --node-inner: #f3f4f6;
+  --node-primary: #111827;
+  --node-secondary: #6b7280;
+  --node-tag-green: #dcfce7;
+  --node-tag-green-text: #166534;
+  --node-tag-yellow: #fef08a;
+  --node-tag-yellow-text: #854d0e;
+  --node-tag-red: #fee2e2;
+  --node-tag-red-text: #991b1b;
+  --node-badge: #ffffff;
+  --node-badge-text: #374151;
+  --node-border: #e5e7eb;
+  --node-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --edge-blue: #3b82f6;
+}
+
+.dark {
+  --node-card: #111827;
+  --node-inner: #1f2937;
+  --node-primary: #f9fafb;
+  --node-secondary: #9ca3af;
+  --node-tag-green: #052e16;
+  --node-tag-green-text: #86efac;
+  --node-tag-yellow: #422006;
+  --node-tag-yellow-text: #fde047;
+  --node-tag-red: #450a0a;
+  --node-tag-red-text: #fca5a5;
+  --node-badge: #374151;
+  --node-badge-text: #e5e7eb;
+  --node-border: #374151;
+  --node-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --edge-blue: #3b82f6;
 }

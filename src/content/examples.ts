@@ -15,14 +15,31 @@ export type FlowNodeType =
   | "approve"
   | "result";
 
+export type NodeCardTone = "green" | "yellow" | "red";
+
+/** Everything the canvas card renders. Optional per node: see `cardFor`. */
+export type NodeCard = {
+  tag: string;
+  tone: NodeCardTone;
+  initials: string;
+  title: string;
+  subtitle: string;
+  tokens: string;
+  status: string;
+  time: string;
+  description: string;
+};
+
 export type FlowNode = {
   id: string;
   type: FlowNodeType;
   label: string;
-  /** Column (left→right on desktop, top→bottom on mobile). */
+  /** Row (top→bottom). */
   stage: number;
-  /** Lane within a stage. 0 = main line, 1 = branch. */
+  /** Lane within a stage. 0 = main column, 1 = branch. */
   row?: number;
+  /** Overrides the derived card. Omit to get sensible defaults per node. */
+  card?: NodeCard;
 };
 
 export type FlowEdge = { from: string; to: string; label?: "Yes" | "No" };
@@ -258,3 +275,52 @@ export const examples: Example[] = [
     },
   },
 ];
+
+/* ------------------------------------------------------------ node cards */
+
+type CardSource = Pick<Example, "setup" | "hook">;
+
+const cardTags: Record<FlowNodeType, { tag: string; tone: NodeCardTone }> = {
+  trigger: { tag: "System Worker", tone: "green" },
+  step: { tag: "AI Worker", tone: "green" },
+  draft: { tag: "AI Worker", tone: "green" },
+  decision: { tag: "Eval Worker", tone: "yellow" },
+  approve: { tag: "Eval Worker", tone: "red" },
+  result: { tag: "System Worker", tone: "green" },
+};
+
+const cardSubtitles: Record<FlowNodeType, string> = {
+  trigger: "Starts the run",
+  step: "Automatic action",
+  draft: "AI draft for review",
+  decision: "Branch point",
+  approve: "Needs your approval",
+  result: "Outcome",
+};
+
+const idleTypes: FlowNodeType[] = ["trigger", "decision", "approve"];
+
+function initialsFor(label: string): string {
+  const words = label.split(/[^A-Za-z0-9]+/).filter(Boolean);
+  if (words.length === 0) return label.slice(0, 2).toUpperCase() || "??";
+  return words.slice(0, 2).map((word) => word.charAt(0).toUpperCase()).join("");
+}
+
+/** Card data for one node: hand-written `node.card` wins, otherwise derived. */
+export function cardFor(example: CardSource, node: FlowNode, index: number): NodeCard {
+  const meta = cardTags[node.type];
+  const setup = example.setup ?? [];
+  const described = setup.length > 0 ? setup[node.stage % setup.length] : undefined;
+  return {
+    tag: meta.tag,
+    tone: meta.tone,
+    initials: initialsFor(node.label),
+    title: node.label,
+    subtitle: cardSubtitles[node.type],
+    tokens: `${10 * (node.stage + 1) + (node.row ?? 0) * 5} TOKEN`,
+    status: idleTypes.includes(node.type) ? "IDLE" : "ANSWER",
+    time: `${(0.1 + (index % 5) * 0.1).toFixed(1)} SEC`,
+    description: described ?? example.hook,
+    ...node.card,
+  };
+}
