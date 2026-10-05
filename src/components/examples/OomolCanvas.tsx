@@ -226,7 +226,7 @@ function Canvas({ flow, title }: { flow: Flow; title: string }) {
   );
   const { zoom } = useViewport();
   const { setNodes: setFlowNodes, setViewport, zoomIn, zoomOut } = useReactFlow<OomolNodeType, OomolEdgeType>();
-  const defaultViewport = narrow ? { x: 0, y: 0, zoom: 0.9 } : { x: 0, y: 0, zoom: 0.85 };
+  const defaultViewport = narrow ? { x: 0, y: 24, zoom: 0.9 } : { x: 0, y: 24, zoom: 0.85 };
 
   useEffect(() => {
     if (!playing) return;

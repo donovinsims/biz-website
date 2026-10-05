@@ -49,7 +49,7 @@ export default function NodeCard({ card, active = false, isSelected = false, onS
           {card.initials}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[16px] leading-tight font-semibold text-[var(--node-primary)]">{card.title}</span>
+          <span className="line-clamp-2 text-[16px] leading-tight font-semibold text-[var(--node-primary)]">{card.title}</span>
           <span className="block truncate text-[13px] leading-tight text-[var(--node-secondary)]">{card.subtitle}</span>
         </span>
         <span className="ml-auto shrink-0 rounded-full border border-[var(--node-border)] bg-[var(--node-badge)] px-2 py-0.5 text-[11px] leading-normal font-semibold whitespace-nowrap text-[var(--node-badge-text)] uppercase">
