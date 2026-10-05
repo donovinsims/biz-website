@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogClose, DialogDescription, DialogPopup, DialogTitle } from "@/components/ui/dialog";
 import { CallTextButtons, PrimaryCta } from "@/components/site/cta";
-import WorkflowDiagram, { FlowList } from "@/components/examples/WorkflowDiagram";
+import OomolCanvas from "@/components/examples/OomolCanvas";
+import { FlowList } from "@/components/examples/WorkflowDiagram";
 import type { Example } from "@/content/examples";
 
 type Props = {
@@ -32,7 +33,7 @@ function Body({ example }: { example: Example }) {
             <span className="max-sm:hidden">See the steps as a list</span>
           </Button>
         </div>
-        {asList ? <FlowList flow={example.flow} /> : <WorkflowDiagram flow={example.flow} title={example.title} />}
+        {asList ? <FlowList flow={example.flow} /> : <OomolCanvas flow={example.flow} title={example.title} />}
       </section>
       <section className="flex flex-col gap-3">
         <H>What I set up</H>

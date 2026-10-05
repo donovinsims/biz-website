@@ -315,3 +315,69 @@
   letter-spacing: -0.03em;
   text-wrap: balance;
 }
+
+/* Oomol workflow canvas tokens (appended: xyflow reads these through .oomol-canvas). */
+:root {
+  --flow-canvas: #f4f4f4;
+  --flow-node: #ffffff;
+  --flow-node-border: #e2e2e2;
+  --flow-edge: #737373;
+  --flow-port: #737373;
+  --flow-human: #fef3c7;
+  --flow-human-border: #f59e0b;
+  --flow-toolbar: #ffffff;
+}
+
+.dark {
+  --flow-canvas: #141414;
+  --flow-node: #262626;
+  --flow-node-border: #3d3d3d;
+  --flow-edge: #8a8a8a;
+  --flow-port: #8a8a8a;
+  --flow-human: #33270f;
+  --flow-human-border: #8a6d2b;
+  --flow-toolbar: #1f1f1f;
+}
+
+.oomol-canvas {
+  --xy-background-color: var(--flow-canvas);
+  --xy-edge-stroke: var(--flow-edge);
+  --xy-edge-stroke-selected: var(--foreground);
+  --xy-edge-stroke-width: 1.5;
+  --xy-connectionline-stroke: var(--flow-port);
+  --xy-connectionline-stroke-width: 1.5;
+  --xy-handle-background-color: var(--flow-port);
+  --xy-handle-border-color: var(--flow-canvas);
+  --xy-handle-border-radius: 9999px;
+  --xy-handle-width: 6px;
+  --xy-handle-height: 6px;
+  --xy-node-background-color: var(--flow-node);
+  --xy-node-border: var(--flow-node-border);
+  --xy-node-text-color: var(--foreground);
+  --xy-controls-button-background-color: var(--flow-toolbar);
+  --xy-controls-button-background-color-hover: var(--flow-node);
+  --xy-controls-button-background-color-disabled: var(--flow-toolbar);
+  --xy-controls-button-color: var(--foreground);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--flow-node-border);
+  --xy-controls-box-background-color: var(--flow-toolbar);
+  --xy-controls-box-border-color: var(--flow-node-border);
+  --xy-controls-box-shadow-hover: none;
+  --xy-controls-button-icon-active: none;
+  --xy-minimap-background-color: var(--flow-node);
+  --xy-minimap-mask-background-color: var(--flow-canvas);
+  --xy-attribution-background-color: transparent;
+  --xy-attribution-text-color: var(--muted-foreground);
+  background-color: var(--flow-canvas);
+}
+
+@keyframes oomol-dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.oomol-active-edge {
+  stroke-dasharray: 6 4;
+  animation: oomol-dash 1s linear infinite;
+}

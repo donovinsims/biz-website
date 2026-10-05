@@ -143,4 +143,7 @@
 *.iges               filter=lfs diff=lfs merge=lfs -text
 *.stl                filter=lfs diff=lfs merge=lfs -text
 *.nc                 filter=lfs diff=lfs merge=lfs -text
-*.mat                filter=lfs diff=lfs merge=lfs -text
+# ---------------------------------------------------------------------------
+# Local skill assets: stored as raw blobs, never LFS
+# ---------------------------------------------------------------------------
+.claude/**           -filter -diff -merge text
