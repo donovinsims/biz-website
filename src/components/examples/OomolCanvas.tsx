@@ -118,7 +118,7 @@ const handleStyle = {
   minHeight: 8,
   borderRadius: 9999,
   border: "2px solid var(--node-card)",
-  background: "var(--edge-blue)",
+  background: "var(--edge-neutral)",
 };
 
 function OomolNode({ data }: NodeProps<OomolNodeType>) {
@@ -167,7 +167,7 @@ function OomolEdge({
         fill="none"
         id={id}
         markerEnd={markerEnd}
-        style={{ ...style, stroke: "var(--edge-blue)", strokeWidth: 2, strokeDasharray: "6 5" }}
+        style={{ ...style, stroke: "var(--edge-neutral)", strokeWidth: 2, strokeDasharray: "6 5" }}
       />
       {label ? (
         <EdgeLabelRenderer>

@@ -27,7 +27,7 @@ export default function NodeCard({ card, active = false, isSelected = false, onS
         "transition-[transform,box-shadow] duration-200 ease-in-out",
         "motion-safe:hover:-translate-y-[2px]",
         isSelected
-          ? "shadow-[var(--node-shadow),0_0_0_2px_#3B82F6]"
+          ? "shadow-[var(--node-shadow),0_0_0_2px_var(--foreground)]"
           : "shadow-[var(--node-shadow)] motion-safe:hover:shadow-[var(--node-shadow),0_14px_24px_-10px_rgba(0,0,0,0.28)]",
         active ? "ring-2 ring-foreground" : "",
       ]

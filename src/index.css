@@ -419,3 +419,29 @@
   --node-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
   --edge-blue: #3b82f6;
 }
+
+/* Node card tokens, corrected to the monochrome rule (appended last: these win).
+   Only the green/yellow/red category tag pills keep color. */
+:root {
+  --node-card: #ffffff;
+  --node-inner: #f5f5f5;
+  --node-primary: #000000;
+  --node-secondary: #6b6b6b;
+  --node-badge: #ffffff;
+  --node-badge-text: #000000;
+  --node-border: #e6e6e6;
+  --node-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --edge-neutral: #6b6b6b;
+}
+
+.dark {
+  --node-card: #181818;
+  --node-inner: #1e1e1e;
+  --node-primary: #f3f5f7;
+  --node-secondary: #9a9a9a;
+  --node-badge: #101010;
+  --node-badge-text: #f3f5f7;
+  --node-border: #2e2e2e;
+  --node-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+  --edge-neutral: #9a9a9a;
+}
